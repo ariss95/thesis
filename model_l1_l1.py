@@ -32,7 +32,13 @@ class l1_l1(nn.Module):
         ADG = torch.mm(AD, self.affine_G)
         W = self.affine_G - torch.mm(U, ADG)
         S = torch.eye(self.hidden_size, device=self.device, dtype=torch.float32) - torch.mm(U, AD)
-        h-previous = self.h_0
-        for i in range(self.hidden_layers):
-            h_k = activation_func_phi('''''')
-            s = torch.mm(self.Dict_D, h_k)
+        h_previous = self.h_0
+        input_ = data#TODO deside shape of input
+        for t in range(len(data)):
+            for i in range(self.hidden_layers):
+                if i==0:
+                    u = torch.mm(W, self.h_0) + torch.mm(U, input_(t))
+                else:
+                    u = torch.mm(S, h_previous) + torch.mm(U, input_(t))
+                h_k = activation_func_phi(u, torch.mm(self.affine_G, h_previous), self.l_1, self.l_2, self.a)
+                s = torch.mm(self.Dict_D, h_k)
