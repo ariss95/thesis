@@ -24,6 +24,8 @@ class l1_l1(nn.Module):
         self.hidden_layers = 3
 
     def activation_func_phi(u, v, l1, l2, a):
+        
+        phi = torch.zeros()
         return        
 
     def forward(self, data):
@@ -37,8 +39,8 @@ class l1_l1(nn.Module):
         for t in range(len(data)):
             for i in range(self.hidden_layers):
                 if i==0:
-                    u = torch.mm(W, self.h_0) + torch.mm(U, input_(t))
+                    u = torch.mm(W, self.h_0) + torch.mm(U, input_[t])
                 else:
-                    u = torch.mm(S, h_previous) + torch.mm(U, input_(t))
+                    u = torch.mm(S, h_previous) + torch.mm(U, input_[t])
                 h_k = activation_func_phi(u, torch.mm(self.affine_G, h_previous), self.l_1, self.l_2, self.a)
                 s = torch.mm(self.Dict_D, h_k)
