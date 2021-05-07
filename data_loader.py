@@ -21,6 +21,7 @@ class Moving_MNIST_Loader:
             self.data = self.data.reshape(
                 [self.num_frames, self.num_samples, -1])
 
+
         self.train_set_size = int(self.num_samples * 0.8)
         self.validation_size = self.train_set_size + \
             int(self.num_samples * 0.1)
@@ -62,8 +63,8 @@ class Moving_MNIST_Loader:
             self.validation_index += batch_size
             return batch
 '''
-REMOVEEEE!!!!!!!!!!
-# TODO REMOVE
+
+
         self.input = 256
         self.compressed = int(self.input/4)
         self.hidden_size = self.input * 4
@@ -88,12 +89,11 @@ REMOVEEEE!!!!!!!!!!
         self.a = torch.tensor(1.0, device=self.device,
                               dtype=torch.float32, requires_grad=True)
         self.hidden_layers = 3
-
 def activation_func_phi(u, v, l1, l2, a):
     print(u.size())
     g1 = l1/a
     g2 = l2/a
-    temp_tensor = torch.zeros(u.size(), device=self.device)
+    temp_tensor = torch.zeros(u.size(), device="cpu")
     condition1 = (((v >= 0) & (v+g1+g2 <= u)) | ((v < 0) & (u >= g1 + g2)))
     temp_tensor[condition1] = u[condition1] - g1 - g2
     condition2 = (((v >= 0) & (v + g1 - g2 <= u) & (u < v + g1 + g2)) |
@@ -143,7 +143,7 @@ compressed_input = compressed_input.view([time_steps, 3, -1])
 print(compressed_input.size())
 # for t in range(time_steps):
 #input_ = torch.mm(matrix_A, input_[t])
-
+s_t = []
 for t in range(1):
     for i in range(1):
         if i == 0:
@@ -154,4 +154,7 @@ for t in range(1):
             u = torch.mm(h_previous, S) + torch.mm(compressed_input[t], U.t())
         h_k = activation_func_phi(u, torch.mm(
             h_previous, data_loader.affine_G), data_loader.l_1, data_loader.l_2, data_loader.a)
-'''
+    h_previous = h_k
+    s = torch.mm(h_k, Dict_D.t())
+    s_t.append(s)
+    '''

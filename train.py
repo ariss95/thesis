@@ -2,19 +2,27 @@ import torch
 import torch.nn as nn
 import model_l1_l1
 import data_loader as dl
+import plot_utils
 
 #TODO load daata here
-path = '/movingMnist/mnist_test_seq_16.npy'
+
+input_size = 256
+if input_size == 256:
+	path = '/home/aris/Desktop/anomaly_detection/movingMnist/mnist_test_seq_16.npy'
+else:
+	path = '/movingMnist/mnist_test_seq.npy'
+
 time_steps = 20
 data_loader = dl.Moving_MNIST_Loader(path=path, time_steps=time_steps, flatten=True)
 device = torch.device('cpu')
-model = model_l1_l1.l1_l1(input)(256).to(device)
+batch_size = 32
+
+model = model_l1_l1.l1_l1(input_size, batch_size).to(device)
 learning_rate = 0.001
 epochs = 200
-batch_size = 150
 training_samples = 8000
 test_samples = 1000
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)#TODO change with all trainable params
+optimizer = torch.optim.Adam(model.parameters, lr=learning_rate)#TODO change with all trainable params
 
 
 
@@ -39,9 +47,12 @@ def fit(model, dataloader):
 			if j == (iterations-1) and (epoch%50 == 0 or epoch == epochs-1):
 				# !!!!! comment out this lines if you dont want to save frames
 				filename = "endofepoch" + str(epoch) +".png"
+				print(output.shape)
 				plot_utils.save_frame(output, filename)
                 #TODO add some evaluation
 		print("epoch loss: " + str(loss))
+		print(loss)
+
 		training_loss.append(loss)
 	return training_loss
 
@@ -73,6 +84,7 @@ def compute_psnr(frame1, frame2):
 	#print(mse)
 	psnr = 20 * torch.log10(255/torch.sqrt(mse))
 	return psnr
+
 training_loss = fit(model,data_loader)
 #print(training_loss)
 plt.figure(1)
