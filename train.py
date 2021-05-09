@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import model_l1_l1
 import data_loader as dl
+import matplotlib.pyplot as plt
 import plot_utils
 
 #TODO load daata here
@@ -18,7 +19,7 @@ device = torch.device('cpu')
 batch_size = 32
 
 model = model_l1_l1.l1_l1(input_size, batch_size).to(device)
-learning_rate = 0.001
+learning_rate = 0.0003
 epochs = 200
 training_samples = 8000
 test_samples = 1000
@@ -40,14 +41,17 @@ def fit(model, dataloader):
 			input_ = torch.tensor(data, dtype=torch.float32, device=device)
 			optimizer.zero_grad()
 			output = model.forward(input_)
-			loss_func = torch.mean((output - input_) ** 2)
+			#print("!!!!!!!!!!!!\n")
+			#print(output)
+			print("iteration ", str(j))
+			loss_func = torch.mean((input_ - output) ** 2)
 			loss += loss_func.item()
 			loss_func.backward()
 			optimizer.step()
 			if j == (iterations-1) and (epoch%50 == 0 or epoch == epochs-1):
 				# !!!!! comment out this lines if you dont want to save frames
 				filename = "endofepoch" + str(epoch) +".png"
-				print(output.shape)
+				#print(output)
 				plot_utils.save_frame(output, filename)
                 #TODO add some evaluation
 		print("epoch loss: " + str(loss))
@@ -65,7 +69,7 @@ def test(model, dataloader):
 		for i in range (iterations): 
 			loss = 0.0
 			test_data = dataloader.get_batch("test", batch_size)
-			input_ = torch.tensor(test_data, dtype=torch.float32, device=device)
+			input_ = torch.tensor(test_data,  device=device)
 			output = model.forward(input_)
 			loss = torch.mean((output - input_) ** 2).item()
 			for frame in range(time_steps):
@@ -85,6 +89,8 @@ def compute_psnr(frame1, frame2):
 	psnr = 20 * torch.log10(255/torch.sqrt(mse))
 	return psnr
 
+#print(model.Dict_D)
+torch.autograd.set_detect_anomaly(True)
 training_loss = fit(model,data_loader)
 #print(training_loss)
 plt.figure(1)
