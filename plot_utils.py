@@ -6,6 +6,14 @@ import torchvision
 width = 16 #output[0][0].shape[0]
 height = 16 #output[0][0].shape[1]
 def save_frame(output, filename):
+    global width
+    global height
+    if filename=="compressed.png":
+        width = 8
+        height = 8
+    elif filename=="testepoch.png":
+        width = 16
+        height = 16
     x1 = output[0][0].view(1, width, height)
     x1 = x1.permute(1, 2, 0)
     x1 = x1.cpu()
@@ -19,6 +27,8 @@ def save_frame(output, filename):
     #plt.draw()
     plt.savefig(filename)
     plt.close()
+    width = 16
+    height = 16
 
 def save_sequences(data, video, output, filename):
     

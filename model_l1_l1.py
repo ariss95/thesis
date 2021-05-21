@@ -5,28 +5,31 @@ import torch.nn as nn
 import numpy as np
 import time
 import math
+import plot_utils as pl
 from math import sqrt
 
 class l1_l1(nn.Module):
-    def __init__(self, input, batch_size):
+    def __init__(self, input, compression_rate, divider_for_A, K, hidden_size, batch_size):
         super(l1_l1, self).__init__()
         self.input = input
         self.batch_size = batch_size
-        self.compressed = int(self.input/4)
-        self.hidden_size = self.input * 4
+        self.compressed = int(self.input * compression_rate)
+        self.hidden_size = hidden_size #self.input * 4
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.A_matrix = np.asarray(
-            np.random.RandomState().uniform( size=(self.compressed, self.input)), dtype=np.float32)
+        self.A_matrix = np.asarray(np.random.RandomState().uniform( size=(self.compressed, self.input)) / divider_for_A, dtype=np.float32)
         self.matrix_A = torch.tensor(self.A_matrix, device=self.device,  requires_grad=True)
-        dct_dictionary = DCTDictionary(int(sqrt(self.input)),int(sqrt(self.hidden_size)))
+        #print(self.matrix_A.size())
+
+        dct_dictionary = DCTDictionary(int(sqrt(self.input)), int(sqrt(self.hidden_size)))
         self.Dict_D = torch.tensor(dct_dictionary.matrix, device=self.device, dtype=torch.float32, requires_grad=True)#############FIX
-        #self.Dict_D = torch.randn(256,1024, requires_grad=True)
+        #self.Dict_D = torch.randn(256,1024, device=self.device, requires_grad=True)
+        print(self.Dict_D.max(), self.Dict_D.min())
         self.h_0 = torch.zeros((self.batch_size, self.hidden_size), device=self.device, requires_grad=True)
         self.affine_G = torch.eye(self.hidden_size, device=self.device,  requires_grad=True)
         self.l_1 = torch.tensor(1.0, device=self.device,  requires_grad=True)
         self.l_2 = torch.tensor(0.01, device=self.device, requires_grad=True)
         self.a = torch.tensor(1.0, device=self.device,   requires_grad=True)
-        self.hidden_layers = 2
+        self.hidden_layers = K
         self.parameters = [self.matrix_A, self.Dict_D, self.h_0, self.a, self.l_1, self.l_2]
 
     def activation_func_phi(self, u, v, l1, l2, a):
@@ -48,7 +51,7 @@ class l1_l1(nn.Module):
         temp_tensor[condition5] = u[condition5] + g1 + g2
         condition6 = ((v<0) & (u<v-g1-g2) & (u> -math.inf))
         temp_tensor[condition6] = u[condition6] - g1 + g2
-        print(temp_tensor[condition1].size(), temp_tensor[condition2].size(),temp_tensor[condition3].size(),temp_tensor[condition4].size(), temp_tensor[condition5].size(), temp_tensor[condition6].size())
+        #print(temp_tensor[condition1].size(), temp_tensor[condition2].size(),temp_tensor[condition3].size(),temp_tensor[condition4].size(), temp_tensor[condition5].size(), temp_tensor[condition6].size())
         #print(temp_tensor)
         return temp_tensor
 
@@ -66,6 +69,7 @@ class l1_l1(nn.Module):
         input_ = input_.reshape([-1, self.input])
         compressed_input = torch.mm(input_, self.matrix_A.t())
         compressed_input = compressed_input.view([time_steps, self.batch_size, -1])
+       # pl.save_frame(compressed_input, "compressed.png")
         for t in range(time_steps):
             for i in range(self.hidden_layers):
                 if i==0:
