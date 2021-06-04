@@ -18,12 +18,12 @@ class l1_l1(nn.Module):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.A_matrix = np.asarray(np.random.RandomState().uniform( size=(self.compressed, self.input)) / divider_for_A, dtype=np.float32)
         self.matrix_A = torch.tensor(self.A_matrix, device=self.device,  requires_grad=True)
-        #print(self.matrix_A.size())
+        print(self.matrix_A.size())
 
         dct_dictionary = DCTDictionary(int(sqrt(self.input)), int(sqrt(self.hidden_size)))
-        self.Dict_D = torch.tensor(dct_dictionary.matrix, device=self.device, dtype=torch.float32, requires_grad=True)#############FIX
+        self.Dict_D = torch.tensor(dct_dictionary.matrix, device=self.device, dtype=torch.float32, requires_grad=True)
         #self.Dict_D = torch.randn(256,1024, device=self.device, requires_grad=True)
-        print(self.Dict_D.max(), self.Dict_D.min())
+        #print(self.Dict_D.max(), self.Dict_D.min())
         self.h_0 = torch.zeros((self.batch_size, self.hidden_size), device=self.device, requires_grad=True)
         self.affine_G = torch.eye(self.hidden_size, device=self.device,  requires_grad=True)
         self.l_1 = torch.tensor(1.0, device=self.device,  requires_grad=True)
@@ -65,6 +65,7 @@ class l1_l1(nn.Module):
         S = torch.eye(self.hidden_size, device=self.device, dtype=torch.float32) - torch.mm(U, AD)
         h_previous = self.h_0
         s_t = []
+        h = []
         input_ = data
         input_ = input_.reshape([-1, self.input])
         compressed_input = torch.mm(input_, self.matrix_A.t())
@@ -77,19 +78,18 @@ class l1_l1(nn.Module):
                 else:
                     u = torch.mm(h_k, S) + torch.mm(compressed_input[t], U.t())
                 h_k = self.activation_func_phi(u, torch.mm(h_previous, self.affine_G), self.l_1, self.l_2, self.a)
-                #print("affter phi\n")
-                #time.sleep(2)
-            s = torch.mm(h_k, self.Dict_D.t())
 
+            s = torch.mm(h_k, self.Dict_D.t())
             h_previous = h_k
             #print(h_k)
             #print(s)
             #print(self.Dict_D)
             #time.sleep(2)
+            h.append(h_k)
             s_t.append(s)#TODO change to s^t, to avoid reshape
         #print(s_t)
         #time.sleep(12)
         #print("forward111111111111\n")
         output = torch.stack(s_t)
-        #print(output)
+        sparse_representation = torch.stack(h)
         return output
