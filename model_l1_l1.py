@@ -81,10 +81,7 @@ class l1_l1(nn.Module):
 
             s = torch.mm(h_k, self.Dict_D.t())
             h_previous = h_k
-            #print(h_k)
-            #print(s)
-            #print(self.Dict_D)
-            #time.sleep(2)
+            
             h.append(h_k)
             s_t.append(s)#TODO change to s^t, to avoid reshape
         #print(s_t)

@@ -166,4 +166,6 @@ if __name__ =="__main__":
         plt.draw()
         plt.pause(1)
         print(i)
+        plt.savefig("corrupted_frame"+str(i)+".png")
+
     
