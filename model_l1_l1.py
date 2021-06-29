@@ -5,7 +5,6 @@ import torch.nn as nn
 import numpy as np
 import time
 import math
-import plot_utils as pl
 from math import sqrt
 
 class l1_l1(nn.Module):
@@ -14,9 +13,10 @@ class l1_l1(nn.Module):
         self.input = input
         self.batch_size = batch_size
         self.compressed = int(self.input * compression_rate)
-        self.hidden_size = hidden_size #self.input * 4
+        self.hidden_size = 101*101 #hidden_size #self.input * 4
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.A_matrix = np.asarray(np.random.RandomState().uniform( size=(self.compressed, self.input)) / divider_for_A, dtype=np.float32)
+        print(self.A_matrix.shape)
         self.matrix_A = torch.tensor(self.A_matrix, device=self.device,  requires_grad=True)
         print(self.matrix_A.size())
 
@@ -24,8 +24,8 @@ class l1_l1(nn.Module):
         self.Dict_D = torch.tensor(dct_dictionary.matrix, device=self.device, dtype=torch.float32, requires_grad=True)
         #self.Dict_D = torch.randn(256,1024, device=self.device, requires_grad=True)
         #print(self.Dict_D.max(), self.Dict_D.min())
-        self.h_0 = torch.zeros((self.batch_size, self.hidden_size), device=self.device, requires_grad=True)
-        self.affine_G = torch.eye(self.hidden_size, device=self.device,  requires_grad=True)
+        self.h_0 = torch.zeros((self.batch_size, self.hidden_size), device=self.device, dtype=torch.float32, requires_grad=True)
+        self.affine_G = torch.eye(self.hidden_size, device=self.device, dtype=torch.float32, requires_grad=True)
         self.l_1 = torch.tensor(1.0, device=self.device,  requires_grad=True)
         self.l_2 = torch.tensor(0.01, device=self.device, requires_grad=True)
         self.a = torch.tensor(1.0, device=self.device,   requires_grad=True)
@@ -35,7 +35,7 @@ class l1_l1(nn.Module):
     def activation_func_phi(self, u, v, l1, l2, a):
         g1 = l1/a
         g2 = l2/a
-        temp_tensor = torch.zeros(u.size(), device=self.device)
+        temp_tensor = torch.zeros(u.size(), dtype=torch.float32, device=self.device)
         condition1 = (((v >= 0) & (v+g1+g2 <= u) &(u< math.inf) ) | ((v < 0) & (u >= g1 + g2) &(u< math.inf)))
         temp_tensor[condition1] = u[condition1] - g1 - g2
         condition2 = (((v >= 0) & (v + g1 - g2 <= u) & (u < v + g1 + g2)) |
@@ -66,11 +66,10 @@ class l1_l1(nn.Module):
         h_previous = self.h_0
         s_t = []
         h = []
-        input_ = data
-        input_ = input_.reshape([-1, self.input])
+        #input_ = data
+        input_ = data.reshape([-1, self.input])
         compressed_input = torch.mm(input_, self.matrix_A.t())
         compressed_input = compressed_input.view([time_steps, self.batch_size, -1])
-       # pl.save_frame(compressed_input, "compressed.png")
         for t in range(time_steps):
             for i in range(self.hidden_layers):
                 if i==0:
@@ -88,5 +87,4 @@ class l1_l1(nn.Module):
         #time.sleep(12)
         #print("forward111111111111\n")
         output = torch.stack(s_t)
-        sparse_representation = torch.stack(h)
         return output

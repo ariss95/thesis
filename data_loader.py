@@ -70,7 +70,7 @@ class Moving_MNIST_Loader:
             #if self.anomaly_index + batch_size > int(self.num_samples * 0.1)
             #    batch_size = int(self.num_samples * 0.1) - self.anomaly_index #TODO FIX batch size and 1000 test set
             batch = self.test[:, self.anomaly_index: self.anomaly_index + batch_size, ...]
-            labels_of_batch = self.labels[self.anomaly_index: self.anomaly_index + batch_size]
+            labels_of_batch = self.labels[:,self.anomaly_index: self.anomaly_index + batch_size]
             self.anomaly_index += batch_size
             return batch, labels_of_batch
 
@@ -78,58 +78,57 @@ class Moving_MNIST_Loader:
         anomaly_test_set = []
         size = int(self.num_samples * 0.1)
         print(size)
-        labels = [0] * size
+        labels = np.zeros((20, size))
         for i in range(size):
-            if i%5 == 0:
-                labels[i] = 1
-                self.create_anomaly(i)
+            corrupted_frame = self.create_anomaly(i)
+            labels[corrupted_frame][i] = 1
         self.labels = labels
 
     def create_anomaly(self, index):
         rand_sequence = random.randint(0, self.num_samples-1)
         anomaly = self.test[:, index, ...]
         #print(anomaly.shape)
-        temp = np.copy(anomaly[0])
-        anomaly[0] = np.copy(anomaly[19])
-        anomaly[19] = temp
+        #temp = np.copy(anomaly[0])
+        #anomaly[0] = np.copy(anomaly[19])
+        #anomaly[19] = temp
 
         corrupted = random.randint(0, 19)
-        frame = anomaly[corrupted].reshape(16,16)
-        break_flag = False
+        #frame = anomaly[corrupted].reshape(16,16)
+        #break_flag = False
 
         #the following loop draws a black 3*3 square in the random frame over some non black pixels
-        for corrupted in range(20):
-            break_flag = False
-            frame = anomaly[corrupted].reshape(16,16)              
-            for i in range(1, 14):
-                for j in range(1, 14):
-                    if frame[i][j]!=0 and frame[i][j+1]!=0 and frame[i+2][j]!=0 and frame[i][j+2]!=0 and frame[i+1][j+1]!=0 and frame[i+1][j]!=0 and frame[i+1][j+2]!=0 and frame[i+2][j+2]!=0:
-                        frame[i][j]=0
-                        frame[i][j+1]=0
-                        frame[i][j+2]=0
-                        frame[i+1][j]=0
-                        frame[i+1][j+1]=0
-                        frame[i+1][j+2]=0
-                        frame[i+2][j+1]=0
-                        frame[i+2][j]=0
-                        frame[i+2][j+2]=0
-                        
-                        break_flag = True
-                        break
-                    if frame[i][j]==0 and frame[i][j+1]==0 and frame[i+2][j]==0 and frame[i][j+2]==0 and frame[i+1][j+1]==0 and frame[i+1][j]==0 and frame[i+1][j+2]==0 and frame[i+2][j+2]==0:
-                        frame[i][j]=255
-                        frame[i][j+1]=255
-                        frame[i][j+2]=255
-                        frame[i+1][j]=255
-                        frame[i+1][j+1]=255
-                        frame[i+1][j+2]=255
-                        frame[i+2][j+1]=255
-                        frame[i+2][j]=255
-                        frame[i+2][j+2]=255
-                        #break_flag = True
-                        break
-                if break_flag:
+        #for corrupted in range(20):
+        break_flag = False
+        frame = anomaly[corrupted].reshape(16,16)              
+        for i in range(1, 14):
+            for j in range(1, 14):
+                if frame[i][j]!=0 and frame[i][j+1]!=0 and frame[i+2][j]!=0 and frame[i][j+2]!=0 and frame[i+1][j+1]!=0 and frame[i+1][j]!=0 and frame[i+1][j+2]!=0 and frame[i+2][j+2]!=0:
+                    frame[i][j]=0
+                    frame[i][j+1]=0
+                    frame[i][j+2]=0
+                    frame[i+1][j]=0
+                    frame[i+1][j+1]=0
+                    frame[i+1][j+2]=0
+                    frame[i+2][j+1]=0
+                    frame[i+2][j]=0
+                    frame[i+2][j+2]=0
+                    
+                    break_flag = True
                     break
+                if frame[i][j]==0 and frame[i][j+1]==0 and frame[i+2][j]==0 and frame[i][j+2]==0 and frame[i+1][j+1]==0 and frame[i+1][j]==0 and frame[i+1][j+2]==0 and frame[i+2][j+2]==0:
+                    frame[i][j]=255
+                    frame[i][j+1]=255
+                    frame[i][j+2]=255
+                    frame[i+1][j]=255
+                    frame[i+1][j+1]=255
+                    frame[i+1][j+2]=255
+                    frame[i+2][j+1]=255
+                    frame[i+2][j]=255
+                    frame[i+2][j+2]=255
+                    #break_flag = True
+                    break
+            if break_flag:
+                break
 
         #print(corrupted)
         '''
@@ -140,13 +139,70 @@ class Moving_MNIST_Loader:
             plt.clf()
             plt.title('output')
             plt.imshow(x1, cmap="gray")
-            plt.draw()`
-            plt.pause(1)`
-            print(i)`
+            plt.draw()
+            plt.pause(1)
+            print(i)
         '''
-        return anomaly
+        return corrupted
+
+class UCSD_loader:
+    def __init__(self, path, flatten=True):
+
+        self.train = np.load(path + "Dataset.v1p2.npy").astype('float32')
+        self.test = np.load(path + "Dataset_TestSet.npy").astype('float32')
+        self.labels = np.load(path + "labels.npy").astype('int32')
+        self.num_frames, self.num_train_samples, self.size = self.train.shape[
+            0], self.train.shape[1], self.train.shape[2:]
+        self.num_test_samples =  self.test.shape[1]
+        if flatten:
+            self.train = self.train.reshape([self.num_frames, self.num_train_samples, -1])
+            self.test = self.test.reshape([self.num_frames, self.num_test_samples, -1])
+        self.train_index = 0
+        self.testing_index = 0
+        
+        print("loading of UCSD ped1 completed")
+        print(self.train.shape)
+    
+    def shuffle(self):
+        indices = np.random.permutation(self.num_train_samples)
+        self.train = self.train[:, indices, ...]
+    
+    def get_batch(self, set, batch_size):
+        if set == "train":
+            if self.train_index + batch_size - 1 >= self.num_train_samples:
+                self.shuffle()
+                self.train_index = 0
+
+            batch = self.train[:,
+                               self.train_index:self.train_index + batch_size, ...]
+            self.train_index += batch_size
+            return batch
+        elif set == "anomaly":
+            if self.testing_index + batch_size - 1 >= self.test.shape[1]:
+                self.testing_index = 0
+            batch = self.test[:,
+                              self.testing_index: self.testing_index + batch_size, ...]
+            l = self.labels[:, self.testing_index: self.testing_index + batch_size]
+            self.testing_index += batch_size
+            return batch, l
+    
 
 if __name__ =="__main__":
+    
+    dl = UCSD_loader("UCSD_Anomaly_Dataset.v1p2/UCSD_Anomaly_")
+    data, l  = dl.get_batch("anomaly", 35)
+    for i in range(100):
+            x1 = data[i][0].reshape(64, 64)
+            plt.figure(1)
+            plt.axis("off")
+            plt.clf()
+            plt.title('output')
+            plt.imshow(x1, cmap="gray")
+            plt.draw()
+            plt.pause(0.5)
+            #print(i)
+            print(l[i][1])
+'''    
     path = 'movingMnist/mnist_test_seq_16.npy'
     time_steps = 20
     data_loader = Moving_MNIST_Loader(path=path, time_steps=time_steps, flatten=True)
@@ -165,7 +221,7 @@ if __name__ =="__main__":
         plt.imshow(x1, cmap="gray")
         plt.draw()
         plt.pause(1)
-        print(i)
+        print(data_loader.labels[i][0])
         plt.savefig("corrupted_frame"+str(i)+".png")
 
-    
+'''
