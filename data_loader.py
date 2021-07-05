@@ -6,6 +6,7 @@ import torch
 
 
 # this class is used for loading the dataset from the .npy file
+# moving Mnist dataset with 16*16 dimensions found on: https://1drv.ms/u/s!ApHn770BvhH2cJyQS9lzhfiwReA?e=fPQy59 
 class Moving_MNIST_Loader:
     def __init__(self, path, time_steps, flatten=True):
 

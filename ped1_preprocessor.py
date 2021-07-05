@@ -1,7 +1,11 @@
 import numpy as np
 import glob
 from PIL import Image
-
+'''
+download and extract data from here: www.svcl.ucsd.edu/projects/anomaly/UCSD_Anomaly_Dataset.tar.gz
+execute this script to get 3 .npy files inside the UCSD_Anomaly_Dataset.v1p2 folder
+then run train.py with ped1 as command line argument
+'''
 time_steps = 200
 new_dimensions = 100
 UCSD_FOLDER = 'UCSD_Anomaly_Dataset.v1p2'
