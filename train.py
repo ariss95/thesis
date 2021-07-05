@@ -9,7 +9,7 @@ from math import sqrt
 
 args = sys.argv
 if len(args) != 5:
-	print("arguments needed: compression factor, divider, hidden layers, dataset")
+	print("arguments needed: compression factor, divider, hidden layers, dataset(Mnist or ped1)")
 	exit(0)
 print("compression rate: "+ str((1/float(args[1])) * 100)+"%, divider: " + str(args[2])+" , K: " + str(args[3])) 
 
@@ -24,6 +24,7 @@ if args[4] == "Mnist":
 	data_loader = dl.Moving_MNIST_Loader(path=path, time_steps=time_steps, flatten=True)
 	training_samples = 8000
 	test_samples = 1000
+	batch_size = 32
 elif args[4] == "ped1":
 	path = "UCSD_Anomaly_Dataset.v1p2/UCSD_Anomaly_"
 	time_steps = 67
@@ -31,16 +32,17 @@ elif args[4] == "ped1":
 	data_loader = dl.UCSD_loader(path=path, flatten=True)
 	training_samples = 34
 	test_samples = 35
+	batch_size = 5
 else:
 	print("please specify which dataset you want to use")
 
 pl = plot_utils.plot(int(sqrt(input_size)), int(sqrt(input_size)))
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-batch_size = 5
+
 
 model = model_l1_l1.l1_l1(input_size, float(1/float(args[1])), int(args[2]), int(args[3]), 4*input_size, batch_size).to(device)
 learning_rate = 0.001
-epochs = 10
+epochs = 100
 
 optimizer = torch.optim.Adam(model.parameters, lr=learning_rate)#TODO change with all trainable params
 
@@ -69,9 +71,7 @@ def fit(model, dataloader):
 			if j == (iterations-1) and (epoch%50 == 0 or epoch == epochs-1):
 				# !!!!! comment out this lines if you dont want to save frames
 				filename = "endofepoch" + str(epoch) +".png"
-				#print(epoch)
 				pl.save_frame(output, filename)
-                #TODO add some evaluation
 				
 		#print("epoch loss: " + str(loss))
 		#print(loss)
@@ -197,4 +197,4 @@ if args[4] == "Mnist":
 	psnr = test(model, data_loader)
 	avg_psnr = sum(psnr)/len(psnr) 
 	print("average psnr on test frames: " +str(avg_psnr.item()) + " dB")
-anomaly_classifier(model, data_loader, 28)
+anomaly_classifier(model, data_loader, 25)#TODO try more threshld, add metrics (AUC?, accuracy )

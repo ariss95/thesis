@@ -13,7 +13,7 @@ class l1_l1(nn.Module):
         self.input = input
         self.batch_size = batch_size
         self.compressed = int(self.input * compression_rate)
-        self.hidden_size = 101*101 #hidden_size #self.input * 4
+        self.hidden_size = 101*101 #hidden_size = self.input * 4 #for Mnist
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.A_matrix = np.asarray(np.random.RandomState().uniform( size=(self.compressed, self.input)) / divider_for_A, dtype=np.float32)
         print(self.A_matrix.shape)
@@ -51,8 +51,7 @@ class l1_l1(nn.Module):
         temp_tensor[condition5] = u[condition5] + g1 + g2
         condition6 = ((v<0) & (u<v-g1-g2) & (u> -math.inf))
         temp_tensor[condition6] = u[condition6] - g1 + g2
-        #print(temp_tensor[condition1].size(), temp_tensor[condition2].size(),temp_tensor[condition3].size(),temp_tensor[condition4].size(), temp_tensor[condition5].size(), temp_tensor[condition6].size())
-        #print(temp_tensor)
+        
         return temp_tensor
 
     def forward(self, data):
@@ -65,7 +64,7 @@ class l1_l1(nn.Module):
         S = torch.eye(self.hidden_size, device=self.device, dtype=torch.float32) - torch.mm(U, AD)
         h_previous = self.h_0
         s_t = []
-        h = []
+        h = []#TODO maybe used to count sparsity?????/
         #input_ = data
         input_ = data.reshape([-1, self.input])
         compressed_input = torch.mm(input_, self.matrix_A.t())
@@ -82,9 +81,6 @@ class l1_l1(nn.Module):
             h_previous = h_k
             
             h.append(h_k)
-            s_t.append(s)#TODO change to s^t, to avoid reshape
-        #print(s_t)
-        #time.sleep(12)
-        #print("forward111111111111\n")
+            s_t.append(s)
         output = torch.stack(s_t)
         return output

@@ -87,15 +87,10 @@ class Moving_MNIST_Loader:
     def create_anomaly(self, index):
         rand_sequence = random.randint(0, self.num_samples-1)
         anomaly = self.test[:, index, ...]
-        #print(anomaly.shape)
-        #temp = np.copy(anomaly[0])
-        #anomaly[0] = np.copy(anomaly[19])
-        #anomaly[19] = temp
-
+       
         corrupted = random.randint(0, 19)
         #frame = anomaly[corrupted].reshape(16,16)
         #break_flag = False
-
         #the following loop draws a black 3*3 square in the random frame over some non black pixels
         #for corrupted in range(20):
         break_flag = False
