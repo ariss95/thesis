@@ -1,4 +1,4 @@
-# Anomaly detection on high dimensional data
+# Designing recurrent neural network with deep unfolding method and applying it on video anomaly detection
 ## Abstract
 Video anomaly detection is the process of discovering events that differ with the most common events that are presented in a video. The problem of discovering anomalous events in videos has applications in surveillance and security cameras, health monitoring and other automated processes like autonomous driving. 
 
